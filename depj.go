@@ -37,7 +37,7 @@ func (dj *DependentJobs) FromFile(cgfile string) error {
 
 // Store stores a call graph into a YAML manifest file.
 func (dj DependentJobs) Store(cgfile string) error {
-	bytes, err := yaml.Marshal(dj)
+	bytes, err := yaml.Marshal(dj.jobs)
 	if err != nil {
 		return err
 	}

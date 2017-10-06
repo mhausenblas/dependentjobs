@@ -1,0 +1,34 @@
+j2:
+  id: j2
+  name: job 2
+  dependents:
+  - id: j4
+    name: job 4
+    dependents: []
+j3:
+  id: j3
+  name: job 3
+  dependents:
+  - id: j4
+    name: job 4
+    dependents: []
+j4:
+  id: j4
+  name: job 4
+  dependents: []
+root:
+  id: root
+  name: job 1
+  dependents:
+  - id: j2
+    name: job 2
+    dependents:
+    - id: j4
+      name: job 4
+      dependents: []
+  - id: j3
+    name: job 3
+    dependents:
+    - id: j4
+      name: job 4
+      dependents: []
