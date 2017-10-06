@@ -1,13 +1,29 @@
 package main
 
+import (
+	"fmt"
+	"log"
+)
+
 func main() {
 	dj := New()
-	dj.Add("job 1", 0)
-	dj.Add("job 2", 1)
-	dj.Add("job 3", 1)
-	dj.Add("job 4", 2)
-	dj.AddDependents(1, 3)
-	dj.AddDependents(2, 3)
-	dj.AddDependents(0, 1, 2)
-	dj.Run()
+	// manually create jobs and call graph:
+	dj.Add("root", "job 1", 0)
+	dj.Add("j2", "job 2", 1)
+	dj.Add("j3", "job 3", 1)
+	dj.Add("j4", "job 4", 2)
+	dj.AddDependents("j2", "j4")
+	dj.AddDependents("j3", "j4")
+	dj.AddDependents("root", "j2", "j3")
+	err := dj.Store("./examples/test.cg")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// reading call graph from file:
+	// err := dj.FromFile("./examples/test.cg")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	fmt.Printf("%+v", dj)
+	// dj.Run()
 }
