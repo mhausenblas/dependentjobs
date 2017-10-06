@@ -9,12 +9,12 @@ import (
 
 // Job represents a Kube Job or CronJob resource.
 type Job struct {
-	ID                string        `yaml:"id"`
-	Name              string        `yaml:"name"`
-	Exectime          time.Duration `yaml:"-"`
-	Status            string        `yaml:"-"`
-	Dependents        []Job         `yaml:"dependents"`
-	CompletedUpstream chan bool     `yaml:"-"`
+	ID                string        `yaml:"id" json:"id"`
+	Name              string        `yaml:"name" json:"name"`
+	Exectime          time.Duration `yaml:"-" json:"exectime"`
+	Status            string        `yaml:"-" json:"status"`
+	Dependents        []Job         `yaml:"deps" json:"deps"`
+	CompletedUpstream chan bool     `yaml:"-" json:"-"`
 }
 
 // New creates a new job.

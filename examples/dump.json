@@ -1,0 +1,66 @@
+{
+  "j2": {
+    "id": "j2",
+    "name": "job 2",
+    "exectime": 0,
+    "status": "scheduled",
+    "deps": [{
+      "id": "j4",
+      "name": "job 4",
+      "exectime": 0,
+      "status": "scheduled",
+      "deps": null
+    }]
+  },
+  "j3": {
+    "id": "j3",
+    "name": "job 3",
+    "exectime": 0,
+    "status": "scheduled",
+    "deps": [{
+      "id": "j4",
+      "name": "job 4",
+      "exectime": 0,
+      "status": "scheduled",
+      "deps": null
+    }]
+  },
+  "j4": {
+    "id": "j4",
+    "name": "job 4",
+    "exectime": 0,
+    "status": "scheduled",
+    "deps": null
+  },
+  "root": {
+    "id": "root",
+    "name": "job 1",
+    "exectime": 0,
+    "status": "scheduled",
+    "deps": [{
+      "id": "j2",
+      "name": "job 2",
+      "exectime": 0,
+      "status": "scheduled",
+      "deps": [{
+        "id": "j4",
+        "name": "job 4",
+        "exectime": 0,
+        "status": "scheduled",
+        "deps": null
+      }]
+    }, {
+      "id": "j3",
+      "name": "job 3",
+      "exectime": 0,
+      "status": "scheduled",
+      "deps": [{
+        "id": "j4",
+        "name": "job 4",
+        "exectime": 0,
+        "status": "scheduled",
+        "deps": null
+      }]
+    }]
+  }
+}

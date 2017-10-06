@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -14,7 +15,7 @@ func main() {
 	dj.AddDependents("j2", "j4")
 	dj.AddDependents("j3", "j4")
 	dj.AddDependents("root", "j2", "j3")
-	err := dj.Store("./examples/test.cg")
+	err := dj.Dump("./examples/dump.json")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,6 +24,6 @@ func main() {
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
-	// fmt.Printf("%+v\n", dj)
-	dj.Run()
+	fmt.Printf("%+v\n", dj)
+	// dj.Run()
 }

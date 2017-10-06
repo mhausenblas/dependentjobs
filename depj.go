@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"sync"
 
@@ -35,9 +36,9 @@ func (dj *DependentJobs) FromFile(cgfile string) error {
 	return nil
 }
 
-// Store stores a call graph into a YAML manifest file.
-func (dj DependentJobs) Store(cgfile string) error {
-	bytes, err := yaml.Marshal(dj.jobs)
+// Dump stores a raw call graph into a file as JSON.
+func (dj DependentJobs) Dump(cgfile string) error {
+	bytes, err := json.Marshal(dj.jobs)
 	if err != nil {
 		return err
 	}
