@@ -17,16 +17,46 @@ type Job struct {
 	CompletedUpstream chan bool
 }
 
+// DependentJobs represents a call graph, that is,
+// a collection of Kube Jobs or CronJobs with dependencies.
+type DependentJobs struct {
+	wg   *sync.WaitGroup
+	jobs []Job
+}
+
+// New creates a new call graph.
+func New() DependentJobs {
+	dj := DependentJobs{}
+	dj.wg = &sync.WaitGroup{}
+	return dj
+}
+
 // Run takes a call graph of jobs
 // and runs it in order of its dependencies.
-func Run(jobs []Job) {
-	var wg sync.WaitGroup
-	go jobs[0].Launch()
-	wg.Wait()
+func (dj DependentJobs) Run() {
+	dj.wg.Add(len(dj.jobs))
+	go dj.jobs[0].launch(dj.wg)
+	dj.wg.Wait()
+}
+
+// Add adds a job to the call graph.
+func (dj *DependentJobs) Add(name string, numupstream int) {
+	j := newjob(name, numupstream)
+	dj.jobs = append(dj.jobs, j)
+}
+
+// AddDependents adds one or more dependent jobs to a job.
+func (dj DependentJobs) AddDependents(job int, depjobs ...int) {
+	j := &(dj.jobs[job])
+	depj := []Job{}
+	for _, r := range depjobs {
+		depj = append(depj, dj.jobs[r])
+	}
+	j.adddep(depj...)
 }
 
 // New creates a new job.
-func New(name string, numupstream int) Job {
+func newjob(name string, numupstream int) Job {
 	j := Job{
 		ID:                fmt.Sprintf("j%v", time.Now().UnixNano()),
 		Name:              name,
@@ -37,7 +67,7 @@ func New(name string, numupstream int) Job {
 }
 
 // AddDep adds one or more dependent jobs.
-func (j *Job) AddDep(depj ...Job) {
+func (j *Job) adddep(depj ...Job) {
 	for _, d := range depj {
 		j.Dependents = append(j.Dependents, d)
 	}
@@ -45,16 +75,16 @@ func (j *Job) AddDep(depj ...Job) {
 
 // Launch launches a job, making sure it's only executed
 // when all upstream jobs have completed.
-func (j Job) Launch() {
+func (j Job) launch(wg *sync.WaitGroup) {
 	j.wait4upstream()
 	fmt.Printf(j.render("Launched"))
-	j.execute()
+	j.execute(wg)
 	for _, d := range j.Dependents {
-		go d.Launch()
+		go d.launch(wg)
 	}
 }
 
-func (j Job) execute() {
+func (j Job) execute(wg *sync.WaitGroup) {
 	defer wg.Done()
 	et := time.Duration(500 + 1000000*rand.Intn(2000))
 	j.Exectime = et

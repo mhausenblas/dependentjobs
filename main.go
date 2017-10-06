@@ -1,14 +1,13 @@
 package main
 
 func main() {
-	jobs := []Job{
-		New("job 1", 0),
-		New("job 2", 1),
-		New("job 3", 1),
-		New("job 4", 2),
-	}
-	jobs[1].AddDep(jobs[3])
-	jobs[2].AddDep(jobs[3])
-	jobs[0].AddDep(jobs[1], jobs[2])
-	Run(jobs)
+	dj := New()
+	dj.Add("job 1", 0)
+	dj.Add("job 2", 1)
+	dj.Add("job 3", 1)
+	dj.Add("job 4", 2)
+	dj.AddDependents(1, 3)
+	dj.AddDependents(2, 3)
+	dj.AddDependents(0, 1, 2)
+	dj.Run()
 }
