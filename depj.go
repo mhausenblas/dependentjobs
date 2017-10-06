@@ -66,4 +66,5 @@ func (dj DependentJobs) AddDependents(id string, depjobs ...string) {
 		depj = append(depj, dj.jobs[d])
 	}
 	j.adddep(depj...)
+	dj.jobs[id] = j
 }

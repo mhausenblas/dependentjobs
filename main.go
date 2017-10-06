@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 )
 
 func main() {
@@ -15,15 +14,15 @@ func main() {
 	dj.AddDependents("j2", "j4")
 	dj.AddDependents("j3", "j4")
 	dj.AddDependents("root", "j2", "j3")
-	err := dj.Store("./examples/test.cg")
-	if err != nil {
-		log.Fatal(err)
-	}
+	// err := dj.Store("./examples/test.cg")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	// reading call graph from file:
 	// err := dj.FromFile("./examples/test.cg")
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
-	fmt.Printf("%+v", dj)
-	// dj.Run()
+	fmt.Printf("%+v\n", dj)
+	dj.Run()
 }
