@@ -1,10 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"log"
-)
-
 func main() {
 	dj := New()
 	// manually create jobs and call graph:
@@ -12,18 +7,20 @@ func main() {
 	dj.Add("j2", "job 2", 1)
 	dj.Add("j3", "job 3", 1)
 	dj.Add("j4", "job 4", 2)
+	dj.Add("j5", "job 5", 2)
+	dj.AddDependents("j4", "j5")
 	dj.AddDependents("j2", "j4")
 	dj.AddDependents("j3", "j4")
-	dj.AddDependents("root", "j2", "j3")
-	err := dj.Dump("./examples/dump.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	// reading call graph from file:
-	// err := dj.FromFile("./examples/test.cg")
+	dj.AddDependents("root", "j2", "j3", "j5")
+	// dump the raw call graph:
+	// err := dj.Dump("./examples/dump.json")
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
-	fmt.Printf("%+v\n", dj)
-	// dj.Run()
+	// reading call graph from file:
+	// err := dj.FromFile("./examples/diamond.yaml")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	dj.Run()
 }

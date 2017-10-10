@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"sync"
 
@@ -29,10 +30,22 @@ func (dj *DependentJobs) FromFile(cgfile string) error {
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(yamlFile, &dj.jobs)
+	var spec []struct {
+		ID         string   `yaml:"id"`
+		Name       string   `yaml:"name"`
+		Dependents []string `yaml:"dependents"`
+	}
+	err = yaml.Unmarshal(yamlFile, &spec)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("%+v\n", spec)
+	// generate DJ out of spec
+	// Add for all, then deps with root last
+	// for _, e := range spec {
+	// 	if e.ID == "root"
+	// }
+
 	return nil
 }
 
@@ -49,7 +62,7 @@ func (dj DependentJobs) Dump(cgfile string) error {
 // and runs it in order of its dependencies.
 func (dj DependentJobs) Run() {
 	dj.wg.Add(len(dj.jobs))
-	go dj.jobs["root"].launch(dj.wg)
+	go dj.jobs["root"].launch(dj, dj.wg)
 	dj.wg.Wait()
 }
 
@@ -68,4 +81,9 @@ func (dj DependentJobs) AddDependents(id string, depjobs ...string) {
 	}
 	j.adddep(depj...)
 	dj.jobs[id] = j
+}
+
+// Lookup retrieves a job by ID.
+func (dj DependentJobs) Lookup(id string) Job {
+	return dj.jobs[id]
 }
