@@ -55,6 +55,7 @@ func (j Job) execute(dj DependentJobs, wg *sync.WaitGroup) {
 	time.Sleep(et)
 	j.Status = "completed"
 	fmt.Printf(j.render("Executed"))
+	dj.callseq <- j.ID
 	for _, did := range j.Dependents {
 		d := dj.Lookup(did)
 		d.CompletedUpstream <- true

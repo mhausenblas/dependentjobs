@@ -11,8 +11,9 @@ import (
 // DependentJobs represents a call graph, that is,
 // a collection of Kube Jobs or CronJobs with dependencies.
 type DependentJobs struct {
-	wg   *sync.WaitGroup `yaml:"-"`
-	jobs map[string]Job  `yaml:"jobs"`
+	wg      *sync.WaitGroup `yaml:"-"`
+	jobs    map[string]Job  `yaml:"jobs"`
+	callseq chan string     `yaml:"-"`
 }
 
 // New creates a new call graph.
@@ -39,6 +40,7 @@ func (dj *DependentJobs) FromFile(cgfile string) error {
 		dj.Add(id, job.Name, countupstream(spec, id))
 		dj.AddDependents(id, spec[id].Dependents...)
 	}
+	dj.callseq = make(chan string, len(spec))
 	return nil
 }
 
@@ -81,6 +83,9 @@ func (dj DependentJobs) Run() {
 	dj.wg.Add(len(dj.jobs))
 	go dj.jobs["root"].launch(dj, dj.wg)
 	dj.wg.Wait()
+	// need to close the call sequence channel
+	// in order to be able to drain it in CallSeq():
+	close(dj.callseq)
 }
 
 // Add adds a job to the call graph.
@@ -106,6 +111,15 @@ func (dj DependentJobs) GoString() string {
 	res := ""
 	for _, j := range dj.jobs {
 		res = fmt.Sprintf("%s%#v\n", res, j)
+	}
+	return res
+}
+
+// CallSeq returns the sequence in which the jobs have been called.
+func (dj DependentJobs) CallSeq() []string {
+	res := []string{}
+	for id := range dj.callseq {
+		res = append(res, id)
 	}
 	return res
 }
