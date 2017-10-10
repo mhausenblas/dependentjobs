@@ -80,7 +80,7 @@ func (j Job) wait4upstream() {
 }
 
 func (j Job) render(msg string) string {
-	now := time.Now().Unix()
+	now := time.Now().UnixNano()
 	return fmt.Sprintf("%v| %s: %#v\n", now, msg, j)
 }
 
