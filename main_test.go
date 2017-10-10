@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -15,12 +14,12 @@ func TestOneDep(t *testing.T) {
 		t.FailNow()
 	}
 	want := "root"
-	idroot, _, rootend := extract(got[0])
+	idroot, _, endroot := extract(got[0])
 	if idroot != want {
 		t.Errorf("%s => %q, want %q", cgfile, idroot, want)
 	}
 	idj2, startj2, _ := extract(got[1])
-	if startj2 <= rootend {
+	if startj2 <= endroot {
 		t.Errorf("%s => %q before %q", cgfile, idj2, idroot)
 	}
 }
@@ -33,14 +32,17 @@ func TestTwoDep(t *testing.T) {
 		t.FailNow()
 	}
 	want := "root"
-	if got[0] != want {
-		t.Errorf("%s => %q, want %q", cgfile, got[0], want)
+	idroot, _, endroot := extract(got[0])
+	if idroot != want {
+		t.Errorf("%s => %q, want %q", cgfile, idroot, want)
 	}
-	want0 := "j2"
-	want1 := "j3"
-	if !((got[1] == want0 && got[2] == want1) ||
-		(got[1] == want1 && got[2] == want0)) {
-		t.Errorf("%s => %q, want %q or %q", cgfile, got[1], want0, want1)
+	ida, starta, _ := extract(got[1])
+	if starta <= endroot {
+		t.Errorf("%s => %q before %q", cgfile, ida, idroot)
+	}
+	idb, startb, _ := extract(got[2])
+	if startb <= endroot {
+		t.Errorf("%s => %q before %q", cgfile, idb, idroot)
 	}
 }
 
@@ -52,18 +54,24 @@ func TestDiamond(t *testing.T) {
 		t.FailNow()
 	}
 	want := "root"
-	if got[0] != want {
-		t.Errorf("%s => %q, want %q", cgfile, got[0], want)
+	idroot, _, endroot := extract(got[0])
+	if idroot != want {
+		t.Errorf("%s => %q, want %q", cgfile, idroot, want)
 	}
-	want0 := "j2"
-	want1 := "j3"
-	if !((got[1] == want0 && got[2] == want1) ||
-		(got[1] == want1 && got[2] == want0)) {
-		t.Errorf("%s => %q, want %q or %q", cgfile, got[1], want0, want1)
+	ida, starta, enda := extract(got[1])
+	if starta <= endroot {
+		t.Errorf("%s => %q before %q", cgfile, ida, idroot)
 	}
-	want = "j4"
-	if got[3] != want {
-		t.Errorf("%s => %q, want %q", cgfile, got[3], want)
+	idb, startb, endb := extract(got[2])
+	if startb <= endroot {
+		t.Errorf("%s => %q before %q", cgfile, idb, idroot)
+	}
+	idlast, startlast, _ := extract(got[3])
+	if startlast <= enda {
+		t.Errorf("%s => %q before %q", cgfile, idlast, ida)
+	}
+	if startlast <= endb {
+		t.Errorf("%s => %q before %q", cgfile, idlast, idb)
 	}
 }
 
@@ -75,22 +83,37 @@ func TestDeep(t *testing.T) {
 		t.FailNow()
 	}
 	want := "root"
-	if got[0] != want {
-		t.Errorf("%s => %q, want %q", cgfile, got[0], want)
+	idroot, _, endroot := extract(got[0])
+	if idroot != want {
+		t.Errorf("%s => %q, want %q", cgfile, idroot, want)
 	}
-	want0 := "j2"
-	want1 := "j3"
-	if !((got[1] == want0 && got[2] == want1) ||
-		(got[1] == want1 && got[2] == want0)) {
-		t.Errorf("%s => %q, want %q or %q", cgfile, got[1], want0, want1)
+	ida, starta, enda := extract(got[1])
+	if starta <= endroot {
+		t.Errorf("%s => %q before %q", cgfile, ida, idroot)
 	}
-	want = "j4"
-	if got[3] != want {
-		t.Errorf("%s => %q, want %q", cgfile, got[3], want)
+	idb, startb, endb := extract(got[2])
+	if startb <= endroot {
+		t.Errorf("%s => %q before %q", cgfile, idb, idroot)
 	}
-	want = "j5"
-	if got[4] != want {
-		t.Errorf("%s => %q, want %q", cgfile, got[4], want)
+	idc, startc, endc := extract(got[3])
+	if startc <= enda {
+		t.Errorf("%s => %q before %q", cgfile, idc, idroot)
+	}
+	if startc <= endb {
+		t.Errorf("%s => %q before %q", cgfile, idc, idroot)
+	}
+	idlast, startlast, _ := extract(got[4])
+	if startlast <= endroot {
+		t.Errorf("%s => %q before %q", cgfile, idlast, idroot)
+	}
+	if startlast <= enda {
+		t.Errorf("%s => %q before %q", cgfile, idlast, ida)
+	}
+	if startlast <= endb {
+		t.Errorf("%s => %q before %q", cgfile, idlast, idb)
+	}
+	if startlast <= endc {
+		t.Errorf("%s => %q before %q", cgfile, idlast, idc)
 	}
 }
 
@@ -102,14 +125,17 @@ func TestSeq(t *testing.T) {
 		t.FailNow()
 	}
 	want := "root"
-	if got[0] != want {
-		t.Errorf("%s => %q, want %q", cgfile, got[0], want)
+	idroot, startroot, endroot := extract(got[0])
+	if idroot != want {
+		t.Errorf("%s => %q, want %q", cgfile, idroot, want)
 	}
-	for i, g := range got[1:] {
-		want = fmt.Sprintf("j%d", i+2)
-		if g != want {
-			t.Errorf("%s => %q, want %q", cgfile, g, want)
+	idprev, _, endprev := idroot, startroot, endroot
+	for _, g := range got[1:] {
+		idcurrent, startcurrent, endcurrent := extract(g)
+		if startcurrent <= endprev {
+			t.Errorf("%s => %q before %q", cgfile, idcurrent, idprev)
 		}
+		idprev, endprev = idcurrent, endcurrent
 	}
 }
 
@@ -121,20 +147,31 @@ func TestTree(t *testing.T) {
 		t.FailNow()
 	}
 	want := "root"
-	if got[0] != want {
-		t.Errorf("%s => %q, want %q", cgfile, got[0], want)
+	idroot, _, endroot := extract(got[0])
+	if idroot != want {
+		t.Errorf("%s => %q, want %q", cgfile, idroot, want)
 	}
-	want0 := "j2"
-	want1 := "j3"
-	if !((got[1] == want0 && got[2] == want1) ||
-		(got[1] == want1 && got[2] == want0)) {
-		t.Errorf("%s => %q, want %q or %q", cgfile, got[1], want0, want1)
+	ida, starta, enda := extract(got[1])
+	if starta <= endroot {
+		t.Errorf("%s => %q before %q", cgfile, ida, idroot)
 	}
-	want0 = "j4"
-	want1 = "j5"
-	if !((got[3] == want0 && got[4] == want1) ||
-		(got[3] == want1 && got[4] == want0)) {
-		t.Errorf("%s => %q, want %q or %q", cgfile, got[3], want0, want1)
+	idb, startb, endb := extract(got[2])
+	if startb <= endroot {
+		t.Errorf("%s => %q before %q", cgfile, idb, idroot)
+	}
+	idleafa, startleafa, _ := extract(got[3])
+	if idleafa == "j4" && ida == "j2" && startleafa <= enda {
+		t.Errorf("%s => %q before %q", cgfile, idleafa, ida)
+	}
+	if idleafa == "j4" && idb == "j2" && startleafa <= endb {
+		t.Errorf("%s => %q before %q", cgfile, idleafa, idb)
+	}
+	idleafb, startleafb, _ := extract(got[3])
+	if idleafb == "j5" && ida == "j3" && startleafb <= enda {
+		t.Errorf("%s => %q before %q", cgfile, idleafb, ida)
+	}
+	if idleafa == "j5" && idb == "j3" && startleafb <= endb {
+		t.Errorf("%s => %q before %q", cgfile, idleafb, idb)
 	}
 }
 
