@@ -28,10 +28,10 @@ func newjob(id, name string, numupstream int) Job {
 	return j
 }
 
-// AddDep adds one or more dependent jobs.
-func (j *Job) adddep(depj ...Job) {
+// AddDep adds one or more dependent jobs by ID.
+func (j *Job) adddep(depj ...string) {
 	for _, d := range depj {
-		j.Dependents = append(j.Dependents, d.ID)
+		j.Dependents = append(j.Dependents, d)
 	}
 }
 
@@ -80,5 +80,10 @@ func (j Job) wait4upstream() {
 
 func (j Job) render(msg string) string {
 	now := time.Now().Unix()
-	return fmt.Sprintf("%v| %s: <%v,%v,%v,%v>\n", now, msg, j.ID, j.Name, j.Exectime, j.Status)
+	return fmt.Sprintf("%v| %s: %#v\n", now, msg, j)
+}
+
+// GoString return a canonical string represenation of a Job
+func (j Job) GoString() string {
+	return fmt.Sprintf("<ID: %v, Status: %v, Exectime: %v, Deps: %v>", j.ID, j.Status, j.Exectime, j.Dependents)
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"sync"
@@ -12,8 +11,8 @@ import (
 // DependentJobs represents a call graph, that is,
 // a collection of Kube Jobs or CronJobs with dependencies.
 type DependentJobs struct {
-	wg   *sync.WaitGroup
-	jobs map[string]Job
+	wg   *sync.WaitGroup `yaml:"-"`
+	jobs map[string]Job  `yaml:"jobs"`
 }
 
 // New creates a new call graph.
@@ -24,34 +23,52 @@ func New() DependentJobs {
 	return dj
 }
 
-// FromFile reads a call graph from a YAML manifest file.
+// FromFile reads a call graph from a YAML file.
 func (dj *DependentJobs) FromFile(cgfile string) error {
 	yamlFile, err := ioutil.ReadFile(cgfile)
 	if err != nil {
 		return err
 	}
-	var spec []struct {
-		ID         string   `yaml:"id"`
-		Name       string   `yaml:"name"`
-		Dependents []string `yaml:"dependents"`
-	}
+	spec := make(map[string]Job)
 	err = yaml.Unmarshal(yamlFile, &spec)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%+v\n", spec)
 	// generate DJ out of spec
-	// Add for all, then deps with root last
-	// for _, e := range spec {
-	// 	if e.ID == "root"
-	// }
-
+	for id, job := range spec {
+		dj.Add(id, job.Name, countupstream(spec, id))
+		dj.AddDependents(id, spec[id].Dependents...)
+	}
 	return nil
 }
 
-// Dump stores a raw call graph into a file as JSON.
-func (dj DependentJobs) Dump(cgfile string) error {
-	bytes, err := json.Marshal(dj.jobs)
+func countupstream(jobs map[string]Job, jobid string) int {
+	numupstream := 0
+	switch jobid {
+	case "root":
+		numupstream = 0
+	default:
+		for _, j := range jobs {
+			if contains(j.Dependents, jobid) {
+				numupstream++
+			}
+		}
+	}
+	return numupstream
+}
+
+func contains(list []string, element string) bool {
+	for _, e := range list {
+		if e == element {
+			return true
+		}
+	}
+	return false
+}
+
+// Store stores a call graph into a YAML file.
+func (dj DependentJobs) Store(cgfile string) error {
+	bytes, err := yaml.Marshal(dj.jobs)
 	if err != nil {
 		return err
 	}
@@ -75,15 +92,20 @@ func (dj *DependentJobs) Add(id, name string, numupstream int) {
 // AddDependents adds one or more dependent jobs to a job.
 func (dj DependentJobs) AddDependents(id string, depjobs ...string) {
 	j := dj.jobs[id]
-	depj := []Job{}
-	for _, d := range depjobs {
-		depj = append(depj, dj.jobs[d])
-	}
-	j.adddep(depj...)
+	j.adddep(depjobs...)
 	dj.jobs[id] = j
 }
 
 // Lookup retrieves a job by ID.
 func (dj DependentJobs) Lookup(id string) Job {
 	return dj.jobs[id]
+}
+
+// GoString return a canonical string represenation of a dependent job
+func (dj DependentJobs) GoString() string {
+	res := ""
+	for _, j := range dj.jobs {
+		res = fmt.Sprintf("%s%#v\n", res, j)
+	}
+	return res
 }
