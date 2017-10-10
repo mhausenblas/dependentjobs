@@ -3,6 +3,10 @@ root:
   name: job 1
   deps:
   - j2
+  - j3
 j2:
   id:   j2
   name: job 2
+j3:
+  id:   j3
+  name: job 3

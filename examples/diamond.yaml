@@ -1,0 +1,19 @@
+root:
+  id:   root
+  name: job 1
+  deps:
+  - j2
+  - j3
+j2:
+  id:   j2
+  name: job 2
+  deps:
+  - j4
+j3:
+  id:   j3
+  name: job 3
+  deps:
+  - j4
+j4:
+  id:   j4
+  name: job 4
