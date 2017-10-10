@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 )
@@ -88,6 +89,25 @@ func TestDeep(t *testing.T) {
 	want = "j5"
 	if got[4] != want {
 		t.Errorf("%s => %q, want %q", cgfile, got[4], want)
+	}
+}
+
+func TestSeq(t *testing.T) {
+	cgfile := "seq.yaml"
+	got, err := loadNRun(cgfile)
+	if err != nil {
+		t.Errorf("Can't load call graph %s: %v", cgfile, err)
+		t.FailNow()
+	}
+	want := "root"
+	if got[0] != want {
+		t.Errorf("%s => %q, want %q", cgfile, got[0], want)
+	}
+	for i, g := range got[1:] {
+		want = fmt.Sprintf("j%d", i+2)
+		if g != want {
+			t.Errorf("%s => %q, want %q", cgfile, g, want)
+		}
 	}
 }
 
