@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -14,12 +15,13 @@ func TestOneDep(t *testing.T) {
 		t.FailNow()
 	}
 	want := "root"
-	if got[0] != want {
-		t.Errorf("%s => %q, want %q", cgfile, got[0], want)
+	idroot, _, rootend := extract(got[0])
+	if idroot != want {
+		t.Errorf("%s => %q, want %q", cgfile, idroot, want)
 	}
-	want = "j2"
-	if got[1] != want {
-		t.Errorf("%s => %q, want %q", cgfile, got[1], want)
+	idj2, startj2, _ := extract(got[1])
+	if startj2 <= rootend {
+		t.Errorf("%s => %q before %q", cgfile, idj2, idroot)
 	}
 }
 
@@ -148,4 +150,10 @@ func loadNRun(cg string) ([]string, error) {
 	}
 	dj.Run()
 	return dj.CallSeq(), nil
+}
+
+func extract(csentry string) (id, start, end string) {
+	res := strings.Split(csentry, " ")
+	id, start, end = res[0], res[1], res[2]
+	return
 }

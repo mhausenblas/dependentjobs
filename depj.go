@@ -13,7 +13,7 @@ import (
 type DependentJobs struct {
 	wg      *sync.WaitGroup `yaml:"-"`
 	jobs    map[string]Job  `yaml:"jobs"`
-	callseq chan string     `yaml:"-"`
+	callseq chan Job        `yaml:"-"`
 }
 
 // New creates a new call graph.
@@ -40,7 +40,7 @@ func (dj *DependentJobs) FromFile(cgfile string) error {
 		dj.Add(id, job.Name, countupstream(spec, id))
 		dj.AddDependents(id, spec[id].Dependents...)
 	}
-	dj.callseq = make(chan string, len(spec))
+	dj.callseq = make(chan Job, len(spec))
 	return nil
 }
 
@@ -118,8 +118,9 @@ func (dj DependentJobs) GoString() string {
 // CallSeq returns the sequence in which the jobs have been called.
 func (dj DependentJobs) CallSeq() []string {
 	res := []string{}
-	for id := range dj.callseq {
-		res = append(res, id)
+	for j := range dj.callseq {
+		p := fmt.Sprintf("%s %v %v", j.ID, j.Starttime, j.Endtime)
+		res = append(res, p)
 	}
 	return res
 }

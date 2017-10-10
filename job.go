@@ -9,12 +9,14 @@ import (
 
 // Job represents a Kube Job or CronJob resource.
 type Job struct {
-	ID                string        `yaml:"id" json:"id"`
-	Name              string        `yaml:"name" json:"name"`
-	Exectime          time.Duration `yaml:"-" json:"exectime"`
-	Status            string        `yaml:"-" json:"status"`
-	Dependents        []string      `yaml:"deps" json:"deps"`
-	CompletedUpstream chan bool     `yaml:"-" json:"-"`
+	ID                string        `yaml:"id"`
+	Name              string        `yaml:"name"`
+	Starttime         int64         `yaml:"-"`
+	Endtime           int64         `yaml:"-"`
+	Exectime          time.Duration `yaml:"-"`
+	Status            string        `yaml:"-"`
+	Dependents        []string      `yaml:"deps"`
+	CompletedUpstream chan bool     `yaml:"-"`
 }
 
 // New creates a new job.
@@ -52,10 +54,12 @@ func (j Job) execute(dj DependentJobs, wg *sync.WaitGroup) {
 	defer wg.Done()
 	et := time.Duration(500 + 1000000*rand.Intn(2000))
 	j.Exectime = et
+	j.Starttime = time.Now().UnixNano()
 	time.Sleep(et)
+	j.Endtime = time.Now().UnixNano()
 	j.Status = "completed"
 	fmt.Printf(j.render("Executed"))
-	dj.callseq <- j.ID
+	dj.callseq <- j
 	for _, did := range j.Dependents {
 		d := dj.Lookup(did)
 		d.CompletedUpstream <- true
