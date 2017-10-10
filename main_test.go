@@ -111,6 +111,31 @@ func TestSeq(t *testing.T) {
 	}
 }
 
+func TestTree(t *testing.T) {
+	cgfile := "tree.yaml"
+	got, err := loadNRun(cgfile)
+	if err != nil {
+		t.Errorf("Can't load call graph %s: %v", cgfile, err)
+		t.FailNow()
+	}
+	want := "root"
+	if got[0] != want {
+		t.Errorf("%s => %q, want %q", cgfile, got[0], want)
+	}
+	want0 := "j2"
+	want1 := "j3"
+	if !((got[1] == want0 && got[2] == want1) ||
+		(got[1] == want1 && got[2] == want0)) {
+		t.Errorf("%s => %q, want %q or %q", cgfile, got[1], want0, want1)
+	}
+	want0 = "j4"
+	want1 = "j5"
+	if !((got[3] == want0 && got[4] == want1) ||
+		(got[3] == want1 && got[4] == want0)) {
+		t.Errorf("%s => %q, want %q or %q", cgfile, got[3], want0, want1)
+	}
+}
+
 func loadNRun(cg string) ([]string, error) {
 	dj := New()
 	cgfile, err := filepath.Abs(filepath.Join("examples", cg))
