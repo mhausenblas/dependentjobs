@@ -64,6 +64,33 @@ func TestDiamond(t *testing.T) {
 	}
 }
 
+func TestDeep(t *testing.T) {
+	cgfile := "deep.yaml"
+	got, err := loadNRun(cgfile)
+	if err != nil {
+		t.Errorf("Can't load call graph %s: %v", cgfile, err)
+		t.FailNow()
+	}
+	want := "root"
+	if got[0] != want {
+		t.Errorf("%s => %q, want %q", cgfile, got[0], want)
+	}
+	want0 := "j2"
+	want1 := "j3"
+	if !((got[1] == want0 && got[2] == want1) ||
+		(got[1] == want1 && got[2] == want0)) {
+		t.Errorf("%s => %q, want %q or %q", cgfile, got[1], want0, want1)
+	}
+	want = "j4"
+	if got[3] != want {
+		t.Errorf("%s => %q, want %q", cgfile, got[3], want)
+	}
+	want = "j5"
+	if got[4] != want {
+		t.Errorf("%s => %q, want %q", cgfile, got[4], want)
+	}
+}
+
 func loadNRun(cg string) ([]string, error) {
 	dj := New()
 	cgfile, err := filepath.Abs(filepath.Join("examples", cg))
