@@ -9,9 +9,9 @@ import (
 
 const (
 	// MinExecTimeMs is the minimal execution runtime for a job in ms
-	MinExecTimeMs = 500
+	MinExecTimeMs = 10
 	// MaxExecTimeMs is the maximal execution runtime for a job in ms
-	MaxExecTimeMs = 3000
+	MaxExecTimeMs = 100
 )
 
 // Job represents a Kube Job or CronJob resource.
@@ -24,6 +24,7 @@ type Job struct {
 	Status            string        `yaml:"-"`
 	Dependents        []string      `yaml:"deps"`
 	CompletedUpstream chan bool     `yaml:"-"`
+	Every             int           `yaml:"-"`
 }
 
 // New creates a new job.
@@ -46,14 +47,19 @@ func (j *Job) adddep(depj ...string) {
 
 // Launch launches a job, making sure it's only executed
 // when all upstream jobs have completed.
-func (j Job) launch(dj DependentJobs, wg *sync.WaitGroup) {
+func (j *Job) launch(dj DependentJobs, wg *sync.WaitGroup) {
 	j.wait4upstream()
 	fmt.Printf(j.render("Launched"))
 	j.execute(dj, wg)
 	// fmt.Printf("%s notifying my dependents: %v\n", j.Name, j.Dependents)
 	for _, did := range j.Dependents {
 		d := dj.Lookup(did)
-		go d.launch(dj, wg)
+		if dj.TimeToRun(did) {
+			go d.launch(dj, wg)
+		} else {
+			wg.Done()
+			dj.callseq <- d
+		}
 	}
 }
 
@@ -95,7 +101,11 @@ func (j Job) render(msg string) string {
 	return fmt.Sprintf("%v| %s: %#v\n", now, msg, j)
 }
 
+func (j *Job) periodic(every int) {
+	j.Every = every
+}
+
 // GoString return a canonical string represenation of a Job
 func (j Job) GoString() string {
-	return fmt.Sprintf("<ID: %v, Status: %v, Exectime: %v, Deps: %v>", j.ID, j.Status, j.Exectime, j.Dependents)
+	return fmt.Sprintf("<ID: %v, Every: %d, Status: %v, Exectime: %v, Deps: %v>", j.ID, j.Every+1, j.Status, j.Exectime, j.Dependents)
 }

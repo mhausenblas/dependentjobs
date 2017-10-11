@@ -19,6 +19,8 @@ type DependentJobs struct {
 	result  []string        `yaml:"-"`
 }
 
+var jticks map[string]int
+
 // New creates a new call graph.
 func New() DependentJobs {
 	dj := DependentJobs{}
@@ -81,6 +83,13 @@ func (dj DependentJobs) AddDependents(id string, depjobs ...string) {
 	dj.jobs[id] = j
 }
 
+// AddPeriodic adds a periodic schedule to a job.
+func (dj DependentJobs) AddPeriodic(id string, every int) {
+	j := dj.jobs[id]
+	j.periodic(every - 1)
+	dj.jobs[id] = j
+}
+
 // Lookup retrieves a job by ID.
 func (dj DependentJobs) Lookup(id string) Job {
 	return dj.jobs[id]
@@ -98,6 +107,19 @@ func (dj *DependentJobs) Complete() {
 		p := fmt.Sprintf("%s %v %v", j.ID, j.Starttime, j.Endtime)
 		dj.result = append(dj.result, p)
 	}
+}
+
+// TimeToRun checks if a periodic job can run.
+func (dj DependentJobs) TimeToRun(id string) bool {
+	d := dj.Lookup(id)
+	if d.Every > 0 {
+		if jticks[id] <= d.Every-1 {
+			jticks[id]++
+			return false
+		}
+		jticks[id] = 0
+	}
+	return true
 }
 
 // GoString return a canonical string represenation of a dependent job

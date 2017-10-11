@@ -21,19 +21,24 @@ func main() {
 	// fmt.Printf("%+v\n", dj)
 
 	// run the call graph and print the call sequence:
+	jticks = make(map[string]int)
+	cycle := 0
 	for {
 		go func() {
+			fmt.Printf("\n--- CYCLE %d\nCreating call graph:\n", cycle)
 			dj := New()
 			dj.Add("root", "job 1", 0)
 			dj.Add("j2", "job 2", 1)
+			dj.AddPeriodic("j2", 2)
 			dj.AddDependents("root", "j2")
 			fmt.Printf("%#v\n", dj)
 			fmt.Println("Running jobs in call graph:")
 			dj.Run()
 			dj.Complete()
 			fmt.Printf("Call sequence: %v\n", dj.CallSeq())
+			cycle++
 		}()
-		time.Sleep(5 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }
 
