@@ -7,6 +7,13 @@ import (
 	"time"
 )
 
+const (
+	// MinExecTimeMs is the minimal execution runtime for a job in ms
+	MinExecTimeMs = 500
+	// MaxExecTimeMs is the maximal execution runtime for a job in ms
+	MaxExecTimeMs = 3000
+)
+
 // Job represents a Kube Job or CronJob resource.
 type Job struct {
 	ID                string        `yaml:"id"`
@@ -52,7 +59,7 @@ func (j Job) launch(dj DependentJobs, wg *sync.WaitGroup) {
 
 func (j Job) execute(dj DependentJobs, wg *sync.WaitGroup) {
 	defer wg.Done()
-	et := time.Duration(500 + 1000000*rand.Intn(2000))
+	et := time.Duration(1000000 * (MinExecTimeMs + rand.Intn(MaxExecTimeMs)))
 	j.Exectime = et
 	j.Starttime = time.Now().UnixNano()
 	time.Sleep(et)

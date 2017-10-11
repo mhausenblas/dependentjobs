@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"sync"
+	"time"
 
 	"gopkg.in/yaml.v2"
 )
@@ -21,6 +23,7 @@ func New() DependentJobs {
 	dj := DependentJobs{}
 	dj.jobs = make(map[string]Job)
 	dj.wg = &sync.WaitGroup{}
+	rand.Seed(time.Now().UTC().UnixNano())
 	return dj
 }
 
