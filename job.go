@@ -24,7 +24,7 @@ type Job struct {
 	Status            string        `yaml:"-"`
 	Dependents        []string      `yaml:"deps"`
 	CompletedUpstream chan bool     `yaml:"-"`
-	Every             int           `yaml:"-"`
+	Every             int           `yaml:"every"`
 }
 
 // New creates a new job.

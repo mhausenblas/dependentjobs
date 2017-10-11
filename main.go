@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -27,13 +28,17 @@ func main() {
 		go func() {
 			fmt.Printf("\n--- CYCLE %d\nCreating call graph:\n", cycle)
 			dj := New()
-			dj.Add("root", "job 1", 0)
-			dj.Add("j2", "job 2", 1)
-			dj.Add("j3", "job 3", 1)
-			dj.AddPeriodic("j2", 2)
-			dj.AddPeriodic("j3", 3)
-			dj.AddDependents("root", "j2")
-			dj.AddDependents("j2", "j3")
+			// dj.Add("root", "job 1", 0)
+			// dj.Add("j2", "job 2", 1)
+			// dj.Add("j3", "job 3", 1)
+			// dj.AddPeriodic("j2", 2)
+			// dj.AddPeriodic("j3", 3)
+			// dj.AddDependents("root", "j2")
+			// dj.AddDependents("j2", "j3")
+			err := dj.FromFile("./examples/simplecron.yaml")
+			if err != nil {
+				log.Fatal(err)
+			}
 			fmt.Printf("%#v\n", dj)
 			fmt.Println("Running jobs in call graph:")
 			dj.Run()

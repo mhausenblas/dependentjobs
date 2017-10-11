@@ -45,6 +45,9 @@ func (dj *DependentJobs) FromFile(cgfile string) error {
 	for id, job := range spec {
 		dj.Add(id, job.Name, countupstream(spec, id))
 		dj.AddDependents(id, spec[id].Dependents...)
+		if spec[id].Every > 0 {
+			dj.AddPeriodic(id, spec[id].Every)
+		}
 	}
 	return nil
 }
