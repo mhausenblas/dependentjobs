@@ -2,16 +2,10 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 func main() {
-	// manually create call graph:
-	dj := New()
-	dj.Add("root", "job 1", 0)
-	dj.Add("j2", "job 2", 1)
-	dj.AddDependents("root", "j2")
-	fmt.Printf("%#v\n", dj)
-
 	// store the call graph:
 	// err := dj.Store("./examples/dump.yaml")
 	// if err != nil {
@@ -27,9 +21,20 @@ func main() {
 	// fmt.Printf("%+v\n", dj)
 
 	// run the call graph and print the call sequence:
-	fmt.Println("Running jobs in call graph:")
-	dj.Run()
-	fmt.Printf("Call sequence: %v\n", dj.CallSeq())
+	for {
+		go func() {
+			dj := New()
+			dj.Add("root", "job 1", 0)
+			dj.Add("j2", "job 2", 1)
+			dj.AddDependents("root", "j2")
+			fmt.Printf("%#v\n", dj)
+			fmt.Println("Running jobs in call graph:")
+			dj.Run()
+			dj.Complete()
+			fmt.Printf("Call sequence: %v\n", dj.CallSeq())
+		}()
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func manualcg() DependentJobs {

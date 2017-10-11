@@ -16,6 +16,7 @@ type DependentJobs struct {
 	wg      *sync.WaitGroup `yaml:"-"`
 	jobs    map[string]Job  `yaml:"jobs"`
 	callseq chan Job        `yaml:"-"`
+	result  []string        `yaml:"-"`
 }
 
 // New creates a new call graph.
@@ -87,12 +88,16 @@ func (dj DependentJobs) Lookup(id string) Job {
 
 // CallSeq returns the sequence in which the jobs have been called.
 func (dj DependentJobs) CallSeq() []string {
-	res := []string{}
+	return dj.result
+}
+
+// Complete waits until the cycle is complete using the
+// call sequence for synchronization.
+func (dj *DependentJobs) Complete() {
 	for j := range dj.callseq {
 		p := fmt.Sprintf("%s %v %v", j.ID, j.Starttime, j.Endtime)
-		res = append(res, p)
+		dj.result = append(dj.result, p)
 	}
-	return res
 }
 
 // GoString return a canonical string represenation of a dependent job

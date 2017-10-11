@@ -186,6 +186,7 @@ func loadNRun(cg string) ([]string, error) {
 		return []string{}, err
 	}
 	dj.Run()
+	dj.Complete()
 	return dj.CallSeq(), nil
 }
 
