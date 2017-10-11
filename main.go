@@ -29,16 +29,19 @@ func main() {
 			dj := New()
 			dj.Add("root", "job 1", 0)
 			dj.Add("j2", "job 2", 1)
+			dj.Add("j3", "job 3", 1)
 			dj.AddPeriodic("j2", 2)
+			dj.AddPeriodic("j3", 3)
 			dj.AddDependents("root", "j2")
+			dj.AddDependents("j2", "j3")
 			fmt.Printf("%#v\n", dj)
 			fmt.Println("Running jobs in call graph:")
 			dj.Run()
 			dj.Complete()
 			fmt.Printf("Call sequence: %v\n", dj.CallSeq())
-			cycle++
 		}()
 		time.Sleep(1 * time.Second)
+		cycle++
 	}
 }
 
