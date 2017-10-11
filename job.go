@@ -50,7 +50,7 @@ func (j Job) launch(dj DependentJobs, wg *sync.WaitGroup) {
 	j.wait4upstream()
 	fmt.Printf(j.render("Launched"))
 	j.execute(dj, wg)
-	// fmt.Printf("%s notifying my dependents: %v", j.Name, j.Dependents)
+	// fmt.Printf("%s notifying my dependents: %v\n", j.Name, j.Dependents)
 	for _, did := range j.Dependents {
 		d := dj.Lookup(did)
 		go d.launch(dj, wg)
@@ -59,7 +59,7 @@ func (j Job) launch(dj DependentJobs, wg *sync.WaitGroup) {
 
 func (j Job) execute(dj DependentJobs, wg *sync.WaitGroup) {
 	defer wg.Done()
-	et := time.Duration(1000000 * (MinExecTimeMs + rand.Intn(MaxExecTimeMs)))
+	et := time.Duration(1000000 * (MinExecTimeMs + rand.Intn(MaxExecTimeMs-MinExecTimeMs)))
 	j.Exectime = et
 	j.Starttime = time.Now().UnixNano()
 	time.Sleep(et)

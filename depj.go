@@ -43,32 +43,7 @@ func (dj *DependentJobs) FromFile(cgfile string) error {
 		dj.Add(id, job.Name, countupstream(spec, id))
 		dj.AddDependents(id, spec[id].Dependents...)
 	}
-	dj.callseq = make(chan Job, len(spec))
 	return nil
-}
-
-func countupstream(jobs map[string]Job, jobid string) int {
-	numupstream := 0
-	switch jobid {
-	case "root":
-		numupstream = 0
-	default:
-		for _, j := range jobs {
-			if contains(j.Dependents, jobid) {
-				numupstream++
-			}
-		}
-	}
-	return numupstream
-}
-
-func contains(list []string, element string) bool {
-	for _, e := range list {
-		if e == element {
-			return true
-		}
-	}
-	return false
 }
 
 // Store stores a call graph into a YAML file.
@@ -80,11 +55,12 @@ func (dj DependentJobs) Store(cgfile string) error {
 	return ioutil.WriteFile(cgfile, bytes, 0644)
 }
 
-// Run takes a call graph of jobs
-// and runs it in order of its dependencies.
-func (dj DependentJobs) Run() {
+// Run takes a call graph of jobs and runs it in order of its dependencies.
+func (dj *DependentJobs) Run() {
+	dj.callseq = make(chan Job, len(dj.jobs))
 	dj.wg.Add(len(dj.jobs))
-	go dj.jobs["root"].launch(dj, dj.wg)
+	r := dj.Lookup("root")
+	go r.launch(*dj, dj.wg)
 	dj.wg.Wait()
 	// need to close the call sequence channel
 	// in order to be able to drain it in CallSeq():
@@ -109,6 +85,16 @@ func (dj DependentJobs) Lookup(id string) Job {
 	return dj.jobs[id]
 }
 
+// CallSeq returns the sequence in which the jobs have been called.
+func (dj DependentJobs) CallSeq() []string {
+	res := []string{}
+	for j := range dj.callseq {
+		p := fmt.Sprintf("%s %v %v", j.ID, j.Starttime, j.Endtime)
+		res = append(res, p)
+	}
+	return res
+}
+
 // GoString return a canonical string represenation of a dependent job
 func (dj DependentJobs) GoString() string {
 	res := ""
@@ -118,12 +104,26 @@ func (dj DependentJobs) GoString() string {
 	return res
 }
 
-// CallSeq returns the sequence in which the jobs have been called.
-func (dj DependentJobs) CallSeq() []string {
-	res := []string{}
-	for j := range dj.callseq {
-		p := fmt.Sprintf("%s %v %v", j.ID, j.Starttime, j.Endtime)
-		res = append(res, p)
+func countupstream(jobs map[string]Job, jobid string) int {
+	numupstream := 0
+	switch jobid {
+	case "root":
+		numupstream = 0
+	default:
+		for _, j := range jobs {
+			if contains(j.Dependents, jobid) {
+				numupstream++
+			}
+		}
 	}
-	return res
+	return numupstream
+}
+
+func contains(list []string, element string) bool {
+	for _, e := range list {
+		if e == element {
+			return true
+		}
+	}
+	return false
 }
