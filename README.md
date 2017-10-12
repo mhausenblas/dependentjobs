@@ -13,7 +13,7 @@ Let's have a look at a concrete example of a call graph with four jobs: `root`, 
 
 ![call graph example](doc/cgexample.png)
 
-- The `root` jobs has two dependent jobs: `j2` and `j3`.
+- The `root` job has two dependent jobs: `j2` and `j3`.
 - The job `j4` has two upstream jobs, `j2` and `j3`.
 - When we execute this call graph, we would expect that first `root` is run, then either `j2` or `j3` and, once both `j2` and `j3` have completed, `j4` is run.
 
